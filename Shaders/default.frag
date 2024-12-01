@@ -7,7 +7,6 @@ struct Material {
     float shininess;
 
     bool  useTexture;
-    bool useTexture_2;
 };
 
 struct Light {
@@ -19,12 +18,13 @@ struct Light {
 
 smooth in vec3 fragmentPosition_v;
 smooth in vec3 fragmentNormal_v;
+smooth in vec2 texCoord_v;
 
-out vec4 fragColor;
+out vec4 fragmentColor;
 
 uniform Material material;
 uniform mat4 view;
-
+uniform sampler2D texture;
 
 Light sun;
 
@@ -32,7 +32,7 @@ void setupLights() {
     sun.ambient = vec3(0.1f);
     sun.diffuse = vec3(1.0, 1.0, 0.8f);
     sun.specular = vec3(1.0, 1.0, 0.8f);
-    sun.position = (view * vec4(0.0, 0.0, 10.0, 0.0)).xyz;
+    sun.position = (view * vec4(0.0, 10.0, 0.0, 0.0)).xyz;
 }
 
 vec4 directionalLight(Light light, Material material, vec3 fragmentPosition, vec3 fragmentNormal) {
@@ -56,7 +56,11 @@ void main()
 {
     setupLights();
     vec3 globalAmbientLight = vec3(0.1);
-    fragColor = vec4(material.ambient * globalAmbientLight, 0.0);
+    fragmentColor = vec4(material.ambient * globalAmbientLight, 0.0);
 
-    fragColor += directionalLight(sun, material, fragmentPosition_v, fragmentNormal_v);
+    fragmentColor += directionalLight(sun, material, fragmentPosition_v, fragmentNormal_v);
+
+    if (material.useTexture) {
+        fragmentColor *= texture(texture, texCoord_v);
+    }
 }

@@ -1,8 +1,11 @@
 #include "Shader.h"
 #include <windows.h>
 
-Shader::Shader() : program(0)
+Shader::Shader()
 {
+	program = 0;
+
+
 	locations.position = -1;
 	locations.normal = -1;
 	locations.model = -1;
@@ -15,6 +18,10 @@ Shader::Shader() : program(0)
 	locations.ambient = -1;
 	locations.specular = -1;
 	locations.shininess = -1;
+
+	locations.textureCoord = -1;
+	locations.texture = -1;
+	locations.useTexture = -1;
 }
 
 Shader::~Shader() {
@@ -47,7 +54,7 @@ void Shader::createProgram(const std::string vertexFile, const std::string fragm
 	}
 }
 
-unsigned int Shader::createShader(const std::string& filePath, unsigned int shaderType) {
+unsigned int Shader::createShader(const std::string& filePath, const unsigned int shaderType) {
 	std::ifstream file;
 	std::stringstream bufferedLines;
 	std::string line;
@@ -60,7 +67,6 @@ unsigned int Shader::createShader(const std::string& filePath, unsigned int shad
 	}
 
 	while (std::getline(file, line)) {
-		//std::cout << line << std::endl;
 		bufferedLines << line << '\n';
 	}
 	std::string shaderSource = bufferedLines.str();
@@ -86,6 +92,7 @@ unsigned int Shader::createShader(const std::string& filePath, unsigned int shad
 void Shader::setUp(void) {
 	locations.position = glGetAttribLocation(program, "position");
 	locations.normal = glGetAttribLocation(program, "normal");
+	locations.textureCoord = glGetAttribLocation(program, "textureCoord");
 
 	locations.model = glGetUniformLocation(program, "model");
 	locations.view = glGetUniformLocation(program, "view");
@@ -98,6 +105,8 @@ void Shader::setUp(void) {
 	locations.ambient = glGetUniformLocation(program, "material.ambient");
 	locations.specular = glGetUniformLocation(program, "material.specular");
 	locations.shininess = glGetUniformLocation(program, "material.shininess");
+	locations.texture = glGetUniformLocation(program, "material.texture");
+	locations.useTexture = glGetUniformLocation(program, "material.useTexture");
 
 	assert(locations.position != -1);
 	assert(locations.normal != -1);
@@ -110,14 +119,16 @@ void Shader::setUp(void) {
 	assert(locations.ambient != -1);
 	assert(locations.specular != -1);
 	assert(locations.shininess != -1);
+	assert(locations.textureCoord != -1);
+	assert(locations.texture != -1);
+	assert(locations.useTexture != -1);
 }
 
-void Shader::useProgram() {
-	glUseProgram(program);
-}
-
-void Shader::notUseProgram() {
-	glUseProgram(0);
+void Shader::useProgram(const bool use) {
+	if (use)
+		glUseProgram(program);
+	else
+		glUseProgram(0);
 }
 
 void Shader::setMatrices(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection) {	
@@ -141,9 +152,20 @@ void Shader::setMatrices(const glm::mat4& model, const glm::mat4& view, const gl
 	
 }
 
-void Shader::setMaterial(const glm::vec3& diffuse, const glm::vec3& ambient, const glm::vec3& specular, const float shininess) {
+void Shader::setMaterial(const glm::vec3& diffuse, const glm::vec3& ambient, const glm::vec3& specular, const float shininess, const GLuint texture) {
 	glUniform3fv(locations.diffuse, 1, glm::value_ptr(diffuse));
 	glUniform3fv(locations.ambient, 1, glm::value_ptr(ambient));
 	glUniform3fv(locations.specular, 1, glm::value_ptr(specular));
 	glUniform1f(locations.shininess, shininess);
+
+	if (texture != 0) {
+		glUniform1i(locations.useTexture, 1);
+		glUniform1i(locations.texture, 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+	}
+	else {
+		glUniform1i(locations.useTexture, 0);
+		std::cout << "No texture\n" << std::endl;
+	}
 }

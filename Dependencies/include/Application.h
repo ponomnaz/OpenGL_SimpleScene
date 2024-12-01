@@ -6,6 +6,7 @@
 #include "Camera.h"
 #include "Object.h"
 #include "Shader.h"
+#include "SkyBox.h"
 
 class Application {
 public:
@@ -41,6 +42,9 @@ private:
     Camera* camera;
 
     Shader* mainShader;
+
+    SkyBoxShader* skyBoxShader;
+    SkyBox* skyBox;
 
     std::vector<Object*> sceneObjects;
 

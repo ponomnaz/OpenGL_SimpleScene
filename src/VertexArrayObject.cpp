@@ -10,18 +10,18 @@ VertexArrayObject::~VertexArrayObject()
 	glDeleteVertexArrays(1, &ID);
 }
 
-void VertexArrayObject::LinkAttributes(GLuint layout, GLuint numComponents, GLuint type, GLsizeiptr stride, void* offset)
+void VertexArrayObject::linkAttributes(GLuint layout, GLuint numComponents, GLuint type, GLsizeiptr stride, void* offset)
 {
 	glEnableVertexAttribArray(layout);
 	glVertexAttribPointer(layout, numComponents, type, GL_FALSE, stride, offset);
 }
 
-void VertexArrayObject::Bind()
+void VertexArrayObject::bind()
 {
 	glBindVertexArray(ID);
 }
 
-void VertexArrayObject::Unbind()
+void VertexArrayObject::unbind()
 {
 	glBindVertexArray(0);
 }

@@ -9,10 +9,8 @@ public:
 
 	GLuint ID;
 
-	void LinkAttributes(GLuint layout, GLuint numComponents, GLuint type, GLsizeiptr stride, void* offset);
+	void bind();
 
-	void Bind();
-
-	void Unbind();
+	void unbind();
 };
 

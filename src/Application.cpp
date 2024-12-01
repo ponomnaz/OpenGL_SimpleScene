@@ -7,7 +7,11 @@ Application::Application() {
 
 Application::~Application() {
     delete mainShader;
+    delete skyBoxShader;
+     
     delete camera;
+    delete skyBox;
+   
 
     for (auto o : sceneObjects) {
         delete o;
@@ -59,7 +63,7 @@ void Application::setUpGlfw() {
 
 void Application::setUpOpengl() {
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
 
     glViewport(0, 0, width, height);
 
@@ -71,12 +75,21 @@ void Application::setUpOpengl() {
 
 void Application::setUpShaders() {
     mainShader = new Shader();
-    mainShader->createProgram("C:/OpenGL_SimpleScene/Scene/src/default.vert", "C:/OpenGL_SimpleScene/Scene/src/default.frag");
+    mainShader->createProgram("C:/OpenGL_SimpleScene/Scene/Shaders/default.vert", "C:/OpenGL_SimpleScene/Scene/Shaders/default.frag");
     mainShader->setUp();
+
+    skyBoxShader = new SkyBoxShader();
+    skyBoxShader->createProgram("C:/OpenGL_SimpleScene/Scene/Shaders/skyBox.vert", "C:/OpenGL_SimpleScene/Scene/Shaders/skyBox.frag");
+    skyBoxShader->setUp();
 }
 
 void Application::setUpSceneObjects() {
+    ilInit();
+
     camera = new Camera(mainShader, width, height);
+    skyBox = new SkyBox(skyBoxShader, "C:/OpenGL_SimpleScene/Scene/Data/SkyBox/skybox");
+    if (skyBox->loadModel())
+        std::cerr << "NICE LOADING" << std::endl;
 
     Object* obj = new Object(mainShader, "C:/OpenGL_SimpleScene/Scene/Data/Duck/duck.obj");
     if (obj->loadModel())
@@ -119,8 +132,12 @@ void Application::displayCb() {
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     camera->render();
+
     glm::mat4 viewMatrix = camera->getViewMatrix();
     glm::mat4 projectionMatrix = camera->getProjectionMatrix();
+
+    skyBox->render(viewMatrix, projectionMatrix, camera->getPosition());
+
     for (auto object : sceneObjects) {
         object->render(viewMatrix, projectionMatrix);
     }
@@ -179,7 +196,7 @@ void Application::mouseButtonCbHandler(const int button, const int action) {
     switch (button)
     {
     case GLFW_MOUSE_BUTTON_LEFT:
-        std::cerr << "GLFW_MOUSE_BUTTON_LEFT" << std::endl;
+        std::cerr << "x = " << camera->getPosition().x << " y = " << camera->getPosition().y << " z = " << camera->getPosition().z << std::endl;
         break;
     case GLFW_MOUSE_BUTTON_RIGHT:
         std::cerr << "GLFW_MOUSE_BUTTON_RIGHT" << std::endl;

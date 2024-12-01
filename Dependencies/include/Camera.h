@@ -17,6 +17,7 @@ public:
 
     glm::mat4 getViewMatrix();
     glm::mat4 getProjectionMatrix();
+    glm::vec3 getPosition();
 
 private:
     int width;
@@ -28,7 +29,8 @@ private:
     Shader* shader;
 
     glm::vec3 position;
-    glm::vec3 eulers;
+    float pitch;            // up-and-down, rotation around the x-axis
+    float yaw;              // left-and-righ, rotation around the y-axis
 
     glm::vec3 right;
     glm::vec3 up;
@@ -41,7 +43,7 @@ private:
     float speed;
     float sensitivity;
 
-    const glm::vec3 global_up = { 0.0f, 0.0f, 1.0f };
+    const glm::vec3 global_up = { 0.0f, 1.0f, 0.0f };
 
     void move(std::unordered_set<int> keys);
     void rotate();

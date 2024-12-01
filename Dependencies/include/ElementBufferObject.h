@@ -9,8 +9,8 @@ public:
 
 	GLuint ID;
 
-	void Bind();
+	void bind();
 
-	void Unbind();
+	void unbind();
 };
 

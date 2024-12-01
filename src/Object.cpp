@@ -1,12 +1,15 @@
 #include "Object.h"
+#include <string>
+#include <locale>
+#include <codecvt>
 
 Object::Object(Shader* shader, const std::string file) {
     this->shader = shader;
 	MODEL_FILE_PATH = file;
 	size = { 1.0f, 1.0f, 1.0f };
-    position = {3.0f, 0.0f, 0.25f};
+    position = {5.0f, 0.0f, 0.0f};
     rotationAxis = {1.0f, 0.0f, 0.0f};
-	angle = 90.0f;
+	angle = 0.0f;
 
 	modelMatrix = glm::mat4(1.0f);
 	modelMatrix = glm::translate(modelMatrix, position);
@@ -17,8 +20,6 @@ Object::Object(Shader* shader, const std::string file) {
 Object::~Object() {
 	for (auto g : geometry)
 		delete g;
-
-	delete shader;
 }
 
 void Object::update(const double dt) {
@@ -33,18 +34,19 @@ void Object::render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
 
 	for (const auto g : geometry) {
 		if (shader != nullptr) {
-			shader->useProgram();
+			shader->useProgram(true);
 
 			shader->setMatrices(modelMatrix, viewMatrix, projectionMatrix);
-			shader->setMaterial(g->diffuse, g->ambient, g->specular, g->shininess);
+			shader->setMaterial(g->diffuse, g->ambient, g->specular, g->shininess, g->texture);
 
-			g->VAO->Bind();
+
+			g->VAO->bind();
 			glDrawElements(GL_TRIANGLES, g->numTriangles * 3, GL_UNSIGNED_INT, 0);
-			g->VAO->Unbind();
+			g->VAO->unbind();
 
-			shader->notUseProgram();
+			shader->useProgram(false);
 		} else {
-			std::cerr << "Object::draw(): Can't draw, mesh is not initialized properly!" << std::endl;
+			std::cerr << "Object::render(): Can't draw, mesh is not initialized properly!" << std::endl;
 		}
 	}
 }
@@ -138,43 +140,113 @@ bool Object::loadSingleMesh(ObjectGeometry** geometry, aiMesh* mesh, aiMaterial*
 		opacity = 1.0f;
 	(*geometry)->shininess = shininess * opacity;
 
-	//(*geometry)->texture = 0;
-	//if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
-	//	aiString path;
+	(*geometry)->texture = 0;
+	if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+		aiString path;
 
-	//	mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
-	//	std::string name = path.data;
+		mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+		std::string name = path.data;
 
-	//	size_t found = MODEL_FILE_NAME.find_last_of("/\\");
-	//	if (found != std::string::npos) {
-	//		name.insert(0, MODEL_FILE_NAME.substr(0, found + 1));
-	//	}
+		size_t found = MODEL_FILE_PATH.find_last_of("/\\");
+		if (found != std::string::npos) {
+			name.insert(0, MODEL_FILE_PATH.substr(0, found + 1));
+		}
 
-	//	std::cout << "Loading texture file: " << name << std::endl;
-	//	(*geometry)->texture = pgr::createTexture(name);
-	//}
+		std::cout << "Loading texture file: " << name << std::endl;
+		(*geometry)->texture = createTexture(name, false);
+	}
 
 	(*geometry)->VAO = new VertexArrayObject();
-	(*geometry)->VAO->Bind();
+	(*geometry)->VAO->bind();
 
-	(*geometry)->EBO->Bind();
+	(*geometry)->EBO->bind();
 
 	bool validInit = false;
 
 	if (shader != nullptr) {
 
-		(*geometry)->VBO->Bind();
-		(*geometry)->VAO->LinkAttributes(shader->locations.position, 3, GL_FLOAT, 0, (void*)0);
-		(*geometry)->VAO->LinkAttributes(shader->locations.normal, 3, GL_FLOAT, 0, (void*)(3 * sizeof(float) * mesh->mNumVertices));
-		//(*geometry)->VAO->LinkAttributes(shader->locations.textureCoord, 2, GL_FLOAT, 0, (void*)(6 * sizeof(float) * mesh->mNumVertices));
-		(*geometry)->VBO->Unbind();
+		(*geometry)->VBO->bind();
+		(*geometry)->VAO->linkAttributes(shader->locations.position, 3, GL_FLOAT, 0, (void*)0);
+		(*geometry)->VAO->linkAttributes(shader->locations.normal, 3, GL_FLOAT, 0, (void*)(3 * sizeof(float) * mesh->mNumVertices));
+		(*geometry)->VAO->linkAttributes(shader->locations.textureCoord, 2, GL_FLOAT, 0, (void*)(6 * sizeof(float) * mesh->mNumVertices));
+		(*geometry)->VBO->unbind();
 
 		validInit = true;
 	}
 
-	(*geometry)->VAO->Unbind();;
+	(*geometry)->VAO->unbind();;
 
 	(*geometry)->numTriangles = mesh->mNumFaces;
 
 	return validInit;
+}
+
+GLuint Object::createTexture(const std::string& fileName, bool mipmap) {
+	// generate and bind one texture
+	GLuint tex = 0;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	// set linear filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// upload our image data to OpenGL
+	if (!loadTexImage2D(fileName, GL_TEXTURE_2D)) {
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDeleteTextures(1, &tex);
+		return 0;
+	}
+	// create mipmaps
+	if (mipmap)
+		glGenerateMipmap(GL_TEXTURE_2D);
+	// unbind the texture (just in case someone will mess up with texture calls later)
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return tex;
+}
+
+bool Object::loadTexImage2D(const std::string& fileName, GLenum target) {
+	// DevIL library has to be initialized (ilInit() must be called)
+
+	// DevIL uses mechanism similar to OpenGL, each image has its ID (name)
+	ILuint img_id;
+	ilGenImages(1, &img_id); // generate one image ID (name)
+	ilBindImage(img_id); // bind that generated id
+
+	// set origin to LOWER LEFT corner (the orientation which OpenGL uses)
+	ilEnable(IL_ORIGIN_SET);
+	ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_LOWER_LEFT);
+
+	// this will load image data to the currently bound image
+	if (ilLoadImage(stringToWString(fileName).c_str()) == IL_FALSE) {
+		ilDeleteImages(1, &img_id);
+		std::cerr << __FUNCTION__ << " cannot load image " << fileName << std::endl;
+		std::cerr << "Error: " << ilGetError() << std::endl;
+		return false;
+	}
+
+	// if the image was correctly loaded, we can obtain some informatins about our image
+	ILint width = ilGetInteger(IL_IMAGE_WIDTH);
+	ILint height = ilGetInteger(IL_IMAGE_HEIGHT);
+	ILenum format = ilGetInteger(IL_IMAGE_FORMAT);
+	// there are many possible image formats and data types
+	// we will convert all image types to RGB or RGBA format, with one byte per channel
+	unsigned Bpp = ((format == IL_RGBA || format == IL_BGRA) ? 4 : 3);
+	char* data = new char[width * height * Bpp];
+	// this will convert image to RGB or RGBA, one byte per channel and store data to our array
+	ilCopyPixels(0, 0, 0, width, height, 1, Bpp == 4 ? IL_RGBA : IL_RGB, IL_UNSIGNED_BYTE, data);
+	// image data has been copied, we dont need the DevIL object anymore
+	ilDeleteImages(1, &img_id);
+
+	// bogus ATI drivers may require this call to work with mipmaps
+	//glEnable(GL_TEXTURE_2D);
+
+	glTexImage2D(target, 0, Bpp == 4 ? GL_RGBA : GL_RGB, width, height, 0, Bpp == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, data);
+
+	// free our data (they were copied to OpenGL)
+	delete[] data;
+	return true;
+}
+
+std::wstring Object::stringToWString(const std::string& str) {
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.from_bytes(str);
 }

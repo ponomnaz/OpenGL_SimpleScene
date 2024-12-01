@@ -12,12 +12,12 @@ ElementBufferObject::~ElementBufferObject()
 	glDeleteBuffers(1, &ID);
 }
 
-void ElementBufferObject::Bind()
+void ElementBufferObject::bind()
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
 }
 
-void ElementBufferObject::Unbind()
+void ElementBufferObject::unbind()
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
