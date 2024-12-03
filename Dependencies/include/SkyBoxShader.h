@@ -9,12 +9,12 @@ public:
 		GLint coord;
 		GLint inversePV;
 		GLint sampler;
-		GLint cameraPosition;
+		GLint sunIntensity;
 	} locations;
 
 	SkyBoxShader();
 
 	void setUp(void) override;
 
-	void setUniforms(const glm::mat4 inversePV, const glm::vec3 cameraPosition);
+	void setUniforms(const glm::mat4 inversePV, const float intensity);
 };

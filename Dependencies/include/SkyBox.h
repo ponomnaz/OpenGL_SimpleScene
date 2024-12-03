@@ -13,7 +13,7 @@ public:
 
 	bool loadModel();
 
-	void render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3 cameraPosition);
+	void render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const float sunIntensity);
 
 private:
 	std::string MODEL_FILE_PATH;

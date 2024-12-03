@@ -16,7 +16,10 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <cmath>
 
 #include <fstream>
 #include <sstream>
 #include <string>
+
+#define M_PI 3.14159265358979323846

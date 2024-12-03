@@ -11,14 +11,14 @@ SkyBox::~SkyBox()
 	delete geometry;
 }
 
-void SkyBox::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3 cameraPosition) {
+void SkyBox::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const float sunIntensity) {
 
 	shader->useProgram(true);
 	glm::mat4 viewRotation = viewMatrix;
 	viewRotation[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	glm::mat4 inversePV = glm::inverse(projectionMatrix * viewRotation);
 
-	shader->setUniforms(inversePV, cameraPosition);
+	shader->setUniforms(inversePV, sunIntensity);
 
 	geometry->VAO->bind();
 	glBindTexture(GL_TEXTURE_CUBE_MAP, geometry->texture);
@@ -60,7 +60,7 @@ bool SkyBox::loadModel() {
 	};
 
 	for (size_t i = 0; i < 6; i++) {
-		std::string txt = std::string(MODEL_FILE_PATH) + cor[i] + ".png";
+		std::string txt = std::string(MODEL_FILE_PATH) + cor[i] + ".bmp";
 		std::cout << "Loading skybox: " << txt << std::endl;
 		if (!Object::loadTexImage2D(txt, targets[i])) {
 			std::cerr << "SkyBox::loadModel(): Can't load texture image 2D!" << std::endl;

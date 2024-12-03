@@ -3,6 +3,9 @@
 Application::Application() {
     width = 640;
     height = 480;
+
+    execute = false;
+    timeScale = 1.0f;
 }
 
 Application::~Application() {
@@ -11,13 +14,11 @@ Application::~Application() {
      
     delete camera;
     delete skyBox;
-   
+    delete sun;
 
     for (auto o : sceneObjects) {
         delete o;
     }
-
-    glfwTerminate();
 }
 
 void Application::setUpGlfw() {
@@ -58,6 +59,7 @@ void Application::setUpGlfw() {
     glfwSetKeyCallback(window, &keyboardCb);
     glfwSetCursorPosCallback(window, &mouseMotionCb);
     glfwSetMouseButtonCallback(window, &mouseButtonCb);
+    glfwSetScrollCallback(window, &scrollCb);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
@@ -87,6 +89,8 @@ void Application::setUpSceneObjects() {
     ilInit();
 
     camera = new Camera(mainShader, width, height);
+    sun = new Sun();
+
     skyBox = new SkyBox(skyBoxShader, "C:/OpenGL_SimpleScene/Scene/Data/SkyBox/skybox");
     if (skyBox->loadModel())
         std::cerr << "NICE LOADING" << std::endl;
@@ -98,20 +102,21 @@ void Application::setUpSceneObjects() {
 }
 
 void Application::run() {
+    execute = true;
+
     double lastTime = glfwGetTime();
     double accumulatedTime = 0;
 
-    while (!glfwWindowShouldClose(window)) {
+    while (execute && !glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
         accumulatedTime += currentTime - lastTime;
         lastTime = currentTime;
 
         if (accumulatedTime >= TIME_PER_FRAME) {
-            timerCb(accumulatedTime);
+            timerCb(accumulatedTime * timeScale);
             displayCb();
             accumulatedTime -= TIME_PER_FRAME;
         }
-
         glfwPollEvents();
     }
 
@@ -120,6 +125,7 @@ void Application::run() {
 }
 
 void Application::timerCb(const double deltaTime) {
+    sun->update(deltaTime);
     camera->update(deltaTime, keys);
     for (auto object : sceneObjects) {
         object->update(deltaTime);
@@ -135,11 +141,12 @@ void Application::displayCb() {
 
     glm::mat4 viewMatrix = camera->getViewMatrix();
     glm::mat4 projectionMatrix = camera->getProjectionMatrix();
+    sunComponents sunComponents = sun->getComponents();
 
-    skyBox->render(viewMatrix, projectionMatrix, camera->getPosition());
+    skyBox->render(viewMatrix, projectionMatrix, sunComponents.intensity);
 
     for (auto object : sceneObjects) {
-        object->render(viewMatrix, projectionMatrix);
+        object->render(viewMatrix, projectionMatrix, sunComponents);
     }
 
     glDisable(GL_STENCIL_TEST);
@@ -159,12 +166,10 @@ void Application::keyboardCbHandler(const int key, const int action, const int m
         keyPressed(key);
         break;
     case GLFW_REPEAT:
-        
+        keyRepeated(key);
         break;
     case GLFW_RELEASE:
         keyReleased(key);
-        break;
-    default:
         break;
     }
 }
@@ -173,7 +178,13 @@ void Application::keyPressed(const int k) {
     switch (k)
     {
     case GLFW_KEY_ESCAPE:
-
+        execute = false;
+        break;
+    case  GLFW_KEY_UP:
+        changeScaleTimeFactor(1);
+        break;
+    case GLFW_KEY_DOWN:
+        changeScaleTimeFactor(-1);
         break;
     default:
         keys.insert(k);
@@ -183,6 +194,18 @@ void Application::keyPressed(const int k) {
 
 void Application::keyReleased(const int k) {
     keys.erase(k);
+}
+
+void Application::keyRepeated(const int k) {
+    switch (k)
+    {
+    case  GLFW_KEY_UP:
+        changeScaleTimeFactor(1);
+        break;
+    case GLFW_KEY_DOWN:
+        changeScaleTimeFactor(-1);
+        break;
+    }
 }
 
 void Application::mouseMotionCbHandler(const double x, const double y) {
@@ -204,7 +227,18 @@ void Application::mouseButtonCbHandler(const int button, const int action) {
     case GLFW_MOUSE_BUTTON_MIDDLE:
         std::cerr << "GLFW_MOUSE_BUTTON_MIDDLE" << std::endl;
         break;
-    default:
-        break;
     }
+}
+
+void Application::scrollCbHandler(const double yoffset) {
+    std::cerr << yoffset << std::endl;
+}
+
+void Application::changeScaleTimeFactor(const int val) {
+    timeScale += val;
+
+    if (timeScale < MIN_TIME_SCALE)
+        timeScale = MIN_TIME_SCALE;
+    else if (timeScale > MAX_TIME_SCALE)
+        timeScale = MAX_TIME_SCALE;
 }

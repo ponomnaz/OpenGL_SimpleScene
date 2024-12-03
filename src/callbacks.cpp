@@ -23,3 +23,9 @@ void mouseButtonCb(GLFWwindow* window, int button, int action, int mods) {
     if (app)
         app->mouseButtonCbHandler(button, action);
 }
+
+void scrollCb(GLFWwindow* window, double xoffset, double yoffset) {
+    auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (app)
+        app->scrollCbHandler(yoffset);
+}

@@ -10,7 +10,6 @@ Shader::Shader()
 	locations.normal = -1;
 	locations.model = -1;
 	locations.view = -1;
-	locations.projection = -1;
 	locations.PVM = -1;
 	locations.normalMatrix = -1;
 
@@ -18,6 +17,12 @@ Shader::Shader()
 	locations.ambient = -1;
 	locations.specular = -1;
 	locations.shininess = -1;
+
+	locations.sunPosition = -1;
+	locations.sunAmbient = -1;
+	locations.sunDiffuse = -1;
+	locations.sunSpecular = -1;
+	locations.globalAmbientLight = -1;
 
 	locations.textureCoord = -1;
 	locations.texture = -1;
@@ -96,7 +101,6 @@ void Shader::setUp(void) {
 
 	locations.model = glGetUniformLocation(program, "model");
 	locations.view = glGetUniformLocation(program, "view");
-	locations.projection = glGetUniformLocation(program, "projection");
 
 	locations.PVM = glGetUniformLocation(program, "PVM");
 	locations.normalMatrix = glGetUniformLocation(program, "normalMatrix");
@@ -105,20 +109,31 @@ void Shader::setUp(void) {
 	locations.ambient = glGetUniformLocation(program, "material.ambient");
 	locations.specular = glGetUniformLocation(program, "material.specular");
 	locations.shininess = glGetUniformLocation(program, "material.shininess");
-	locations.texture = glGetUniformLocation(program, "material.texture");
+
+	locations.sunPosition = glGetUniformLocation(program, "sun.position");
+	locations.sunAmbient = glGetUniformLocation(program, "sun.ambient");
+	locations.sunDiffuse = glGetUniformLocation(program, "sun.diffuse");
+	locations.sunSpecular = glGetUniformLocation(program, "sun.specular");
+	locations.globalAmbientLight = glGetUniformLocation(program, "sun.globalAmbientLight");
+
+	locations.texture = glGetUniformLocation(program, "texture");
 	locations.useTexture = glGetUniformLocation(program, "material.useTexture");
 
 	assert(locations.position != -1);
 	assert(locations.normal != -1);
 	assert(locations.model != -1);
 	assert(locations.view != -1);
-	assert(locations.projection != -1);
 	assert(locations.PVM != -1);
 	assert(locations.normalMatrix != -1);
 	assert(locations.diffuse != -1);
 	assert(locations.ambient != -1);
 	assert(locations.specular != -1);
 	assert(locations.shininess != -1);
+	assert(locations.sunPosition != -1);
+	assert(locations.sunAmbient != -1);
+	assert(locations.sunDiffuse != -1);
+	assert(locations.sunSpecular != -1);
+	assert(locations.globalAmbientLight != -1);
 	assert(locations.textureCoord != -1);
 	assert(locations.texture != -1);
 	assert(locations.useTexture != -1);
@@ -134,7 +149,6 @@ void Shader::useProgram(const bool use) {
 void Shader::setMatrices(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection) {	
 	glUniformMatrix4fv(locations.model, 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(locations.view, 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
 
 	glm::mat4 PVM = projection * view * model;
 	glUniformMatrix4fv(locations.PVM, 1, GL_FALSE, glm::value_ptr(PVM));
@@ -168,4 +182,12 @@ void Shader::setMaterial(const glm::vec3& diffuse, const glm::vec3& ambient, con
 		glUniform1i(locations.useTexture, 0);
 		std::cout << "No texture\n" << std::endl;
 	}
+}
+
+void Shader::setSun(const sunComponents& components) {
+	glUniform3fv(locations.sunPosition, 1, glm::value_ptr(components.position));
+	glUniform3fv(locations.sunAmbient, 1, glm::value_ptr(components.ambient));
+	glUniform3fv(locations.sunDiffuse, 1, glm::value_ptr(components.diffuse));
+	glUniform3fv(locations.sunSpecular, 1, glm::value_ptr(components.specular));
+	glUniform3fv(locations.globalAmbientLight, 1, glm::value_ptr(components.globalAmbientLight));
 }

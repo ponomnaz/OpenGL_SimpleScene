@@ -152,6 +152,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\VertexArrayObject.cpp" />
     <ClCompile Include="src\VertexBufferObject.cpp" />
+    <ClCompile Include="src\Sun.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\default.frag" />
@@ -172,6 +173,7 @@
     <ClInclude Include="Dependencies\include\VertexBufferObject.h" />
     <ClInclude Include="Dependencies\include\SkyBoxShader.h" />
     <ClInclude Include="Dependencies\include\SkyBox.h" />
+    <ClInclude Include="Dependencies\include\Sun.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

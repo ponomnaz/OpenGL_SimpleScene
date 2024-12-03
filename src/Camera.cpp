@@ -30,7 +30,6 @@ void Camera::render() {
     glm::mat4 view = getViewMatrix();
     glm::mat4 projection = getProjectionMatrix();
 
-    glUniformMatrix4fv(shader->locations.projection, 1, GL_FALSE, glm::value_ptr(projection));
     glUniformMatrix4fv(shader->locations.view, 1, GL_FALSE, glm::value_ptr(view));
     shader->useProgram(false);
 }

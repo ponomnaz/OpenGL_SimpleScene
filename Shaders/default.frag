@@ -9,11 +9,13 @@ struct Material {
     bool  useTexture;
 };
 
-struct Light {
+struct Sun {
+    vec3 position;
+
     vec3  ambient;
     vec3  diffuse;
     vec3  specular;
-    vec3  position;
+    vec3 globalAmbientLight;
 };
 
 smooth in vec3 fragmentPosition_v;
@@ -23,42 +25,32 @@ smooth in vec2 texCoord_v;
 out vec4 fragmentColor;
 
 uniform Material material;
+uniform Sun sun;
 uniform mat4 view;
 uniform sampler2D texture;
 
-Light sun;
-
-void setupLights() {
-    sun.ambient = vec3(0.1f);
-    sun.diffuse = vec3(1.0, 1.0, 0.8f);
-    sun.specular = vec3(1.0, 1.0, 0.8f);
-    sun.position = (view * vec4(0.0, 10.0, 0.0, 0.0)).xyz;
-}
-
-vec4 directionalLight(Light light, Material material, vec3 fragmentPosition, vec3 fragmentNormal) {
+vec4 directionalLight(Sun sun, mat4 view, Material material, vec3 fragmentPosition, vec3 fragmentNormal) {
 
     vec3 outputColor = vec3(0.0);
 
-    vec3 L = normalize(light.position);
+    vec3 L = normalize((view * vec4(sun.position, 0.0)).xyz);
     vec3 R = reflect(-L, fragmentNormal);
     vec3 V = normalize(-fragmentPosition);
     float NdotL = max(0.0, dot(fragmentNormal, L));
     float RdotV = max(0.0, dot(R, V));
 
-    outputColor += material.ambient * light.ambient;
-    outputColor += material.diffuse * light.diffuse * NdotL;
-    outputColor += material.specular * light.specular * pow(RdotV, material.shininess);
+    outputColor += material.ambient * sun.ambient;
+    outputColor += material.diffuse * sun.diffuse * NdotL;
+    outputColor += material.specular * sun.specular * pow(RdotV, material.shininess);
 
     return vec4(outputColor, 1.0);
 }
 
 void main()
 {
-    setupLights();
-    vec3 globalAmbientLight = vec3(0.1);
-    fragmentColor = vec4(material.ambient * globalAmbientLight, 0.0);
+    fragmentColor = vec4(material.ambient * sun.globalAmbientLight, 0.0);
 
-    fragmentColor += directionalLight(sun, material, fragmentPosition_v, fragmentNormal_v);
+    fragmentColor += directionalLight(sun, view, material, fragmentPosition_v, fragmentNormal_v);
 
     if (material.useTexture) {
         fragmentColor *= texture(texture, texCoord_v);

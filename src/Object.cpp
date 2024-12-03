@@ -29,16 +29,14 @@ void Object::update(const double dt) {
 	modelMatrix = glm::scale(modelMatrix, size);
 }
 
-void Object::render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
-	glUniformMatrix4fv(shader->locations.model, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
+void Object::render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, sunComponents components) {
 	for (const auto g : geometry) {
 		if (shader != nullptr) {
 			shader->useProgram(true);
 
 			shader->setMatrices(modelMatrix, viewMatrix, projectionMatrix);
 			shader->setMaterial(g->diffuse, g->ambient, g->specular, g->shininess, g->texture);
-
+			shader->setSun(components);
 
 			g->VAO->bind();
 			glDrawElements(GL_TRIANGLES, g->numTriangles * 3, GL_UNSIGNED_INT, 0);

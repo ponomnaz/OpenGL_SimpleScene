@@ -14,7 +14,7 @@ public:
 
     virtual void update(const double dt);
 
-    virtual void render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+    virtual void render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, sunComponents components);
 
     virtual bool loadModel();
 
