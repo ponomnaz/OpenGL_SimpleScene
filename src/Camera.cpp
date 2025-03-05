@@ -5,9 +5,9 @@ Camera::Camera(Shader* shader, const int w, const int h) {
     this->shader = shader;
     setWindowSize(w, h);
 
-    position = { 0.0f, 0.0f, 0.0f };
+    position = { 0.0f, 1.0f, 0.0f };
     pitch = 0.0f;
-    yaw = -90.0f;
+    yaw = 0.0f;
 
     speed = 0.05f;
     sensitivity = 0.2f;
@@ -16,6 +16,9 @@ Camera::Camera(Shader* shader, const int w, const int h) {
     nearPlane = 0.1f;
     farPlane = 10.0f;
 
+    verticalMovment = Landed;
+    jumpSpeed = 0.2f;
+    gravity = 0.01f;
     computeLocalAxes();
 }
 
@@ -79,11 +82,38 @@ void Camera::move(std::unordered_set<int> keys) {
 
     if (glm::length(dPos) > 0.1f) {
         dPos = glm::normalize(dPos);
+        float y = position.y;
         position += speed * (dPos.z * forwards + dPos.x * right);
+        position.y = y;
     }
 
-    if (position.y < 0.0f)
-        position.y = 0.0f;
+    switch (verticalMovment)
+    {
+    case Camera::Jumped:
+        verticalSpeed = jumpSpeed;
+        verticalMovment = IsJumping;
+        break;
+    case Camera::IsJumping:
+        position.y += verticalSpeed;
+        verticalSpeed -= gravity;
+        if (verticalSpeed <= 0.0f) {
+            verticalMovment = IsLanding;
+        }
+        break;
+    case Camera::IsLanding:
+        position.y += verticalSpeed;
+        verticalSpeed -= gravity;
+        if (position.y <= 1.0f) {
+            position.y = 1.0f;
+            verticalMovment = Landed;
+        }
+        break;
+    case Camera::Landed:
+        if (keys.count(GLFW_KEY_SPACE)) {
+            verticalMovment = Jumped;
+        }
+        break;
+    }
 }
 
 void Camera::rotate() {
