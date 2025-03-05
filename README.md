@@ -46,8 +46,10 @@ This project is a basic 3D rendering engine that handles the loading of models a
    
 2. **Camera Controls**:
    - **WASD**: Move the camera around.
-   - **Arrow Keys**: Look around with the camera.
+   - **Arrow Up**: Speed ​​up time.
+   - **Arrow Down**: Slow down time.
    - **Mouse**: Look around by moving the mouse.
+   - **Esc**: Exit the application.
 
 3. **Adjust Lighting**: The sun's intensity and position are updated dynamically, allowing for the simulation of a day-night cycle.
 
