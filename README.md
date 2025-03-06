@@ -46,6 +46,7 @@ This project is a basic 3D rendering engine that handles the loading of models a
    
 2. **Camera Controls**:
    - **WASD**: Move the camera around.
+   - **Space**: Jump
    - **Arrow Up**: Speed ​​up time.
    - **Arrow Down**: Slow down time.
    - **Mouse**: Look around by moving the mouse.
