@@ -1,7 +1,3 @@
-Certainly! Below is a sample `README.md` template for your project that includes sections such as project description, installation, usage, and more. Feel free to modify it further to suit your project better.
-
----
-
 # 3D Rendering Scene
 
 A simple 3D rendering scene built in C++ using OpenGL, Assimp, and other useful libraries. This engine allows users to load 3D models, apply textures, and render them with shaders and basic lighting, including a dynamic sun object. The scene also includes basic controls like camera movement and scene interaction.
